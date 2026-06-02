@@ -1282,7 +1282,7 @@ async function shareGameCompletionScore() {
   const rankVal = document.getElementById('summary-rank').innerText;
   
   const shareTitle = "Color Color Pride Run Complete! 🏳️‍🌈";
-  const shareText = `I completed the 'Color Color' pride scavenger hunt game and scored a total of ${totalScore} points! Rank: ${rankVal}.${summaryDetails}\nCan you beat my score? Play here:`;
+  const shareText = `I completed the 'Color Color' pride color scavenger hunt game and scored a total of ${totalScore} points!${summaryDetails}\nCan you beat my score? Play here:`;
   
   // Custom dialog or web share
   if (navigator.share) {
@@ -1439,7 +1439,7 @@ async function shareAsInstagram(layoutType) {
 
     ctx.fillStyle = 'rgba(255,255,255,0.7)';
     ctx.font = "600 24px 'Plus Jakarta Sans', sans-serif";
-    ctx.fillText("🏳️‍🌈 PRIDE SCAVENGER HUNT COMPLETE 🏳️‍🌈", canvas.width / 2, subtitleY);
+    ctx.fillText("🏳️‍🌈 PRIDE COLOR SCAVENGER HUNT COMPLETE 🏳️‍🌈", canvas.width / 2, subtitleY);
 
     // 6. Draw stripes
     PRIDE_COLORS.forEach((color, idx) => {
@@ -1741,7 +1741,7 @@ async function downloadCleanCollage() {
 
 async function inviteFriends() {
   const shareTitle = "Play Color Color Scavenger Hunt! 🏳️‍🌈";
-  const shareText = "Hey! You should try 'Color Color' – an awesome mobile web game where you search and photograph objects in your environment to match the Pride Flag colors under 30 seconds! Play here:";
+  const shareText = "Hey! You should try 'Color Color'. It is an awesome web game where you search and photograph objects in your environment to match the Pride Flag colors under 30 seconds! Play here:";
   const shareUrl = window.location.origin + window.location.pathname;
 
   if (navigator.share) {
