@@ -1548,7 +1548,23 @@ async function shareAsInstagram(layoutType) {
     ctx.textAlign = 'center';
     ctx.fillStyle = 'rgba(255,255,255,0.4)';
     ctx.font = "600 20px 'Plus Jakarta Sans', sans-serif";
-    ctx.fillText("Play at: " + window.location.host, canvas.width / 2, brandY);
+    ctx.textAlign = 'center';
+
+ctx.fillStyle = 'rgba(255,255,255,0.85)';
+ctx.font = "700 24px 'Plus Jakarta Sans', sans-serif";
+ctx.fillText(
+  "@color_color_pride",
+  canvas.width / 2,
+  brandY - 25
+);
+
+ctx.fillStyle = 'rgba(255,255,255,0.4)';
+ctx.font = "600 20px 'Plus Jakarta Sans', sans-serif";
+ctx.fillText(
+  "Play at: " + window.location.host,
+  canvas.width / 2,
+  brandY + 25
+);
     if (!isPost) {
       ctx.fillStyle = 'rgba(255,255,255,0.5)';
       ctx.font = "bold 24px 'Plus Jakarta Sans', sans-serif";
