@@ -389,7 +389,6 @@ const PRIDE_COLORS = [
   { id: 'green', name: 'Green', meaning: 'Nature', hue: 125, hex: '#33cc66', satRange: [25, 100], ligRange: [15, 75], glow: 'rgba(51, 204, 102, 0.4)' },
   { id: 'blue', name: 'Blue', meaning: 'Harmony', hue: 220, hex: '#3399ff', satRange: [25, 100], ligRange: [15, 75], glow: 'rgba(51, 153, 255, 0.4)' },
   { id: 'violet', name: 'Violet', meaning: 'Spirit', hue: 285, hex: '#b266ff', satRange: [25, 100], ligRange: [15, 75], glow: 'rgba(178, 102, 255, 0.4)' },
-  { id: 'pink', name: 'Pink', meaning: 'Sexuality & Diversity', hue: 330, hex: '#ff66b2', satRange: [35, 100], ligRange: [30, 85], glow: 'rgba(255, 102, 178, 0.4)' }
 ];
 
 // Active State
@@ -777,19 +776,19 @@ function computeScoringMatrix(canvas, targetColor) {
   // --- SCORING FORMULAS ---
   
   // 1. Color Coverage (Max 500 pts)
-  // Goldilocks Target: [0.15, 0.65]. Full marks for this range.
+  // Goldilocks Target: [0.33, 0.85]. Full marks for this range.
   // Fades down as coverage heads to 95% to discourage phone jamming.
   let coverageScore = 0;
-  if (coverage >= 0.15 && coverage <= 0.65) {
+  if (coverage >= 0.33 && coverage <= 0.85) {
     coverageScore = 500;
-  } else if (coverage < 0.15) {
-    coverageScore = Math.round((coverage / 0.15) * 500);
+  } else if (coverage < 0.33) {
+    coverageScore = Math.round((coverage / 0.33) * 500);
   } else {
-    // scale from 65% up to 95%
+    // scale from 85% up to 95%
     if (coverage >= 0.95) {
       coverageScore = 50; // flat cover penalty
     } else {
-      const scale = (0.95 - coverage) / (0.95 - 0.65);
+      const scale = (0.95 - coverage) / (0.95 - 0.85);
       coverageScore = Math.round(50 + (scale * 450));
     }
   }
@@ -1410,7 +1409,7 @@ async function shareAsInstagram(layoutType) {
       flagX = 140;
       flagY = 240;
       flagW = 800;
-      flagH = 560;
+      flagH = 480;
       stripeH = 80;
       scoreY = 880;
       rankY = 940;
@@ -1422,7 +1421,7 @@ async function shareAsInstagram(layoutType) {
       flagY = 400;
       flagW = 880;
       flagH = 840;
-      stripeH = 120;
+      stripeH = 140;
       scoreY = 1380;
       rankY = 1480;
       brandY = 1780;
@@ -1497,7 +1496,7 @@ async function shareAsInstagram(layoutType) {
       ctx.shadowBlur = 0;
     });
 
-    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.33)';
     ctx.lineWidth = 4;
     ctx.strokeRect(flagX, flagY, flagW, flagH);
 
@@ -1681,7 +1680,7 @@ async function downloadCleanCollage() {
 
     const flagW = 1200;
     const flagH = 840;
-    const stripeH = 120;
+    const stripeH = 140;
 
     // Draw Stripes
     PRIDE_COLORS.forEach((color, idx) => {

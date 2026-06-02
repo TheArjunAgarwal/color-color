@@ -25,7 +25,6 @@
   --pride-green: #33cc66;
   --pride-blue: #3399ff;
   --pride-violet: #b266ff;
-  --pride-pink: #ff66b2;
 }
 
 /* --- Base Resets & Configurations --- */
@@ -340,8 +339,6 @@ button {
 .rainbow-stripe.green { background-color: var(--pride-green); }
 .rainbow-stripe.blue { background-color: var(--pride-blue); }
 .rainbow-stripe.violet { background-color: var(--pride-violet); }
-.rainbow-stripe.pink { background-color: var(--pride-pink); }
-
 .tagline {
   font-size: 1rem;
   font-weight: 500;
@@ -1077,7 +1074,6 @@ button {
 .flag-stripe[data-color="green"] { background-color: rgba(51, 204, 102, 0.12); }
 .flag-stripe[data-color="blue"] { background-color: rgba(51, 153, 255, 0.12); }
 .flag-stripe[data-color="violet"] { background-color: rgba(178, 102, 255, 0.12); }
-.flag-stripe[data-color="pink"] { background-color: rgba(255, 102, 178, 0.12); }
 
 .flag-stripe::after {
   content: '';
@@ -1113,7 +1109,6 @@ button {
 .flag-stripe[data-color="green"] { --stripe-color: var(--pride-green); }
 .flag-stripe[data-color="blue"] { --stripe-color: var(--pride-blue); }
 .flag-stripe[data-color="violet"] { --stripe-color: var(--pride-violet); }
-.flag-stripe[data-color="pink"] { --stripe-color: var(--pride-pink); }
 
 .stripe-label {
   position: relative;

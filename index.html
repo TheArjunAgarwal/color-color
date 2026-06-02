@@ -66,7 +66,6 @@
             <span class="rainbow-stripe green"></span>
             <span class="rainbow-stripe blue"></span>
             <span class="rainbow-stripe violet"></span>
-            <span class="rainbow-stripe pink"></span>
           </div>
           <p class="tagline">The Pride Photo Scavenger Hunt</p>
         </div>
@@ -286,7 +285,6 @@
             <div class="flag-stripe" data-color="green"><div class="stripe-bg"></div><span class="stripe-label">Green: Nature</span></div>
             <div class="flag-stripe" data-color="blue"><div class="stripe-bg"></div><span class="stripe-label">Blue: Harmony</span></div>
             <div class="flag-stripe" data-color="violet"><div class="stripe-bg"></div><span class="stripe-label">Violet: Spirit</span></div>
-            <div class="flag-stripe" data-color="pink"><div class="stripe-bg"></div><span class="stripe-label">Pink: Diversity</span></div>
           </div>
 
           <div class="summary-stats-grid" style="grid-template-columns: 1fr;">
@@ -318,15 +316,9 @@
             <!-- Photo & Collage Downloads -->
             <div class="summary-actions-row">
               <button id="btn-download-photos" class="secondary-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                </svg>
                 <span>Download Photos</span>
               </button>
               <button id="btn-download-collage" class="secondary-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                </svg>
                 <span>Clean Collage</span>
               </button>
             </div>
@@ -366,7 +358,6 @@
           <button class="filter-tab" data-filter="green">Green</button>
           <button class="filter-tab" data-filter="blue">Blue</button>
           <button class="filter-tab" data-filter="violet">Violet</button>
-          <button class="filter-tab" data-filter="pink">Pink</button>
         </div>
 
         <!-- Gallery Grid -->
@@ -399,14 +390,14 @@
         <h2 class="neon-text">Rules</h2>
         
         <div class="rules-scrollable">
-          <h3>The Core Loop</h3>
-          <p>The game challenges you to match 7 colors of the pride flag sequentially: <strong>Red, Orange, Yellow, Green, Blue, Violet, Pink</strong>. You have 30 seconds for each. Snap a photo of an object in your room or environment that matches the color.</p>
+          <h3>How To Play</h3>
+          <p>The game challenges you to match 7 colors of the pride flag sequentially: <strong>Red, Orange, Yellow, Green, Blue, Violet</strong>. You have 30 seconds for each. Snap a photo of an object in your room or environment that matches the color.</p>
           
-          <h3>Anti-Jamming Scoring Engine</h3>
+          <h3>Scoring</h3>
           <p>To discourage simply placing the lens directly on a flat colored screen or surface, the scoring is based on three parameters:</p>
           <ul>
-            <li><strong>Color Coverage (Max 500 pts):</strong> The target color should cover 15% to 65% of the frame. If it fills less than 5% or more than 95% (like an extreme close-up), you receive severe penalties!</li>
-            <li><strong>Detail &amp; Texture (Max 300 pts):</strong> We run a spatial filter to evaluate edges and textures. Real objects (leaves, flowers, mugs) contain clear lines and textures. Blank walls or screens have zero texture and score poorly.</li>
+            <li><strong>Color Coverage (Max 500 pts):</strong> The target color should cover 33% to 85% of the frame. If it fills less than 5% or more than 95% (like an extreme close-up), you receive severe penalties!</li>
+            <li><strong>Detail &amp; Texture (Max 300 pts):</strong> Real objects (leaves, flowers, mugs) contain clear lines and textures. Blank walls or screens have zero texture and score poorly.</li>
             <li><strong>Shade Variations (Max 200 pts):</strong> Real objects have shadows and highlights, creating a rich color landscape. Flat objects score 0.</li>
           </ul>
         </div>
