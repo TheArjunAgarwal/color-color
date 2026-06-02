@@ -10,11 +10,26 @@ class SynthSFX {
   }
   
   init() {
+    if (!this.enabled) return;
     if (!this.ctx) {
-      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          this.ctx = new AudioCtx();
+        } else {
+          this.enabled = false;
+        }
+      } catch (e) {
+        console.warn("AudioContext not supported or blocked by security policy:", e);
+        this.enabled = false;
+      }
     }
-    if (this.ctx.state === 'suspended') {
-      this.ctx.resume();
+    if (this.ctx && this.ctx.state === 'suspended') {
+      try {
+        this.ctx.resume().catch(err => console.warn("Failed to resume AudioContext async:", err));
+      } catch (e) {
+        console.warn("Failed to resume AudioContext:", e);
+      }
     }
   }
   
@@ -25,184 +40,219 @@ class SynthSFX {
   
   playClick() {
     if (!this.enabled) return;
-    this.init();
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(150, this.ctx.currentTime + 0.08);
-    gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    osc.start();
-    osc.stop(this.ctx.currentTime + 0.08);
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(150, this.ctx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.08);
+    } catch (err) {
+      console.warn("playClick failed:", err);
+    }
   }
   
   playTick(isCritical = false) {
     if (!this.enabled) return;
-    this.init();
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = 'triangle';
-    const pitch = isCritical ? 900 : 450;
-    const dur = isCritical ? 0.08 : 0.04;
-    osc.frequency.setValueAtTime(pitch, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + dur);
-    gain.gain.setValueAtTime(isCritical ? 0.06 : 0.03, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    osc.start();
-    osc.stop(this.ctx.currentTime + dur);
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      const pitch = isCritical ? 900 : 450;
+      const dur = isCritical ? 0.08 : 0.04;
+      osc.frequency.setValueAtTime(pitch, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + dur);
+      gain.gain.setValueAtTime(isCritical ? 0.06 : 0.03, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + dur);
+    } catch (err) {
+      console.warn("playTick failed:", err);
+    }
   }
   
   playShutter() {
     if (!this.enabled) return;
-    this.init();
-    const now = this.ctx.currentTime;
-    
-    // Mechanical focus lens: high click
-    const osc1 = this.ctx.createOscillator();
-    const gain1 = this.ctx.createGain();
-    osc1.frequency.setValueAtTime(2200, now);
-    osc1.frequency.linearRampToValueAtTime(900, now + 0.04);
-    gain1.gain.setValueAtTime(0.08, now);
-    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
-    osc1.connect(gain1);
-    gain1.connect(this.ctx.destination);
-    
-    // Shutter curtain sweep noise
-    const bufferSize = this.ctx.sampleRate * 0.12;
-    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = Math.random() * 2 - 1;
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      
+      // Mechanical focus lens: high click
+      const osc1 = this.ctx.createOscillator();
+      const gain1 = this.ctx.createGain();
+      osc1.frequency.setValueAtTime(2200, now);
+      osc1.frequency.linearRampToValueAtTime(900, now + 0.04);
+      gain1.gain.setValueAtTime(0.08, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+      osc1.connect(gain1);
+      gain1.connect(this.ctx.destination);
+      
+      // Shutter curtain sweep noise
+      const bufferSize = this.ctx.sampleRate * 0.12;
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+      
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 1400;
+      
+      const gain2 = this.ctx.createGain();
+      gain2.gain.setValueAtTime(0.06, now);
+      gain2.gain.linearRampToValueAtTime(0.12, now + 0.03);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      
+      noise.connect(filter);
+      filter.connect(gain2);
+      gain2.connect(this.ctx.destination);
+      
+      osc1.start(now);
+      osc1.stop(now + 0.04);
+      noise.start(now);
+      noise.stop(now + 0.12);
+    } catch (err) {
+      console.warn("playShutter failed:", err);
     }
-    const noise = this.ctx.createBufferSource();
-    noise.buffer = buffer;
-    
-    const filter = this.ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.value = 1400;
-    
-    const gain2 = this.ctx.createGain();
-    gain2.gain.setValueAtTime(0.06, now);
-    gain2.gain.linearRampToValueAtTime(0.12, now + 0.03);
-    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-    
-    noise.connect(filter);
-    filter.connect(gain2);
-    gain2.connect(this.ctx.destination);
-    
-    osc1.start(now);
-    osc1.stop(now + 0.04);
-    noise.start(now);
-    noise.stop(now + 0.12);
   }
   
   playScan() {
     if (!this.enabled) return;
-    this.init();
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(180, this.ctx.currentTime);
-    osc.frequency.linearRampToValueAtTime(550, this.ctx.currentTime + 0.7);
-    osc.frequency.linearRampToValueAtTime(200, this.ctx.currentTime + 1.4);
-    
-    const filter = this.ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(450, this.ctx.currentTime);
-    filter.frequency.linearRampToValueAtTime(1400, this.ctx.currentTime + 0.7);
-    
-    gain.gain.setValueAtTime(0.02, this.ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.04, this.ctx.currentTime + 0.7);
-    gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 1.4);
-    
-    osc.connect(filter);
-    filter.connect(gain);
-    gain.connect(this.ctx.destination);
-    
-    osc.start();
-    osc.stop(this.ctx.currentTime + 1.4);
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+      osc.frequency.linearRampToValueAtTime(550, this.ctx.currentTime + 0.7);
+      osc.frequency.linearRampToValueAtTime(200, this.ctx.currentTime + 1.4);
+      
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(450, this.ctx.currentTime);
+      filter.frequency.linearRampToValueAtTime(1400, this.ctx.currentTime + 0.7);
+      
+      gain.gain.setValueAtTime(0.02, this.ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.04, this.ctx.currentTime + 0.7);
+      gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 1.4);
+      
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+      
+      osc.start();
+      osc.stop(this.ctx.currentTime + 1.4);
+    } catch (err) {
+      console.warn("playScan failed:", err);
+    }
   }
   
   playSuccess(score) {
     if (!this.enabled) return;
-    this.init();
-    const now = this.ctx.currentTime;
-    const notes = score > 800 ? [523.25, 659.25, 783.99, 1046.50] : [261.63, 329.63, 392.00, 523.25];
-    const duration = score > 800 ? 0.08 : 0.06;
-    
-    let time = now;
-    notes.forEach((freq, idx) => {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, time);
-      gain.gain.setValueAtTime(0.05, time);
-      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.3);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(time);
-      osc.stop(time + 0.3);
-      time += duration;
-    });
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      const notes = score > 800 ? [523.25, 659.25, 783.99, 1046.50] : [261.63, 329.63, 392.00, 523.25];
+      const duration = score > 800 ? 0.08 : 0.06;
+      
+      let time = now;
+      notes.forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, time);
+        gain.gain.setValueAtTime(0.05, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.3);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(time);
+        osc.stop(time + 0.3);
+        time += duration;
+      });
+    } catch (err) {
+      console.warn("playSuccess failed:", err);
+    }
   }
   
   playFail() {
     if (!this.enabled) return;
-    this.init();
-    const now = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(200, now);
-    osc.frequency.linearRampToValueAtTime(80, now + 0.45);
-    
-    const filter = this.ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(260, now);
-    
-    gain.gain.setValueAtTime(0.06, now);
-    gain.gain.linearRampToValueAtTime(0.001, now + 0.45);
-    
-    osc.connect(filter);
-    filter.connect(gain);
-    gain.connect(this.ctx.destination);
-    
-    osc.start(now);
-    osc.stop(now + 0.45);
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(200, now);
+      osc.frequency.linearRampToValueAtTime(80, now + 0.45);
+      
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(260, now);
+      
+      gain.gain.setValueAtTime(0.06, now);
+      gain.gain.linearRampToValueAtTime(0.001, now + 0.45);
+      
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+      
+      osc.start(now);
+      osc.stop(now + 0.45);
+    } catch (err) {
+      console.warn("playFail failed:", err);
+    }
   }
   
   playGameOver() {
     if (!this.enabled) return;
-    this.init();
-    const now = this.ctx.currentTime;
-    // Chords / retro arpeggio: C major -> F major -> G major -> C major
-    const melody = [
-      { f: 523.25, d: 0.1 },  // C5
-      { f: 659.25, d: 0.1 },  // E5
-      { f: 783.99, d: 0.1 },  // G5
-      { f: 880.00, d: 0.1 },  // A5
-      { f: 987.77, d: 0.1 },  // B5
-      { f: 1046.50, d: 0.4 }  // C6
-    ];
-    let time = now;
-    melody.forEach((note) => {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(note.f, time);
-      gain.gain.setValueAtTime(0.04, time);
-      gain.gain.exponentialRampToValueAtTime(0.001, time + note.d);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(time);
-      osc.stop(time + note.d);
-      time += 0.08;
-    });
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      // Chords / retro arpeggio: C major -> F major -> G major -> C major
+      const melody = [
+        { f: 523.25, d: 0.1 },  // C5
+        { f: 659.25, d: 0.1 },  // E5
+        { f: 783.99, d: 0.1 },  // G5
+        { f: 880.00, d: 0.1 },  // A5
+        { f: 987.77, d: 0.1 },  // B5
+        { f: 1046.50, d: 0.4 }  // C6
+      ];
+      let time = now;
+      melody.forEach((note) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(note.f, time);
+        gain.gain.setValueAtTime(0.04, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + note.d);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(time);
+        osc.stop(time + note.d);
+        time += 0.08;
+      });
+    } catch (err) {
+      console.warn("playGameOver failed:", err);
+    }
   }
 }
 
@@ -216,21 +266,31 @@ let dbConnection = null;
 
 function initGalleryDB() {
   return new Promise((resolve) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onupgradeneeded = (e) => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
-      }
-    };
-    request.onsuccess = (e) => {
-      dbConnection = e.target.result;
-      resolve(true);
-    };
-    request.onerror = (e) => {
-      console.warn("IndexedDB initialisation failed, falling back to session-only storage.", e);
+    if (!window.indexedDB) {
+      console.warn("IndexedDB is not supported by this browser viewport.");
       resolve(false);
-    };
+      return;
+    }
+    try {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+      request.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+        }
+      };
+      request.onsuccess = (e) => {
+        dbConnection = e.target.result;
+        resolve(true);
+      };
+      request.onerror = (e) => {
+        console.warn("IndexedDB initialisation failed, falling back to session-only storage.", e);
+        resolve(false);
+      };
+    } catch (err) {
+      console.warn("IndexedDB opening threw exception:", err);
+      resolve(false);
+    }
   });
 }
 
@@ -379,13 +439,17 @@ function navigateToScreen(screenName) {
     const activeColor = PRIDE_COLORS[activeColorIndex];
     document.body.style.setProperty('--active-color', activeColor.hex);
     document.body.style.setProperty('--active-color-glow', activeColor.glow);
-    prideIndicator.style.backgroundColor = activeColor.hex;
-    prideIndicator.style.boxShadow = `0 0 10px ${activeColor.hex}`;
+    if (prideIndicator) {
+      prideIndicator.style.backgroundColor = activeColor.hex;
+      prideIndicator.style.boxShadow = `0 0 10px ${activeColor.hex}`;
+    }
   } else {
     document.body.style.setProperty('--active-color', '#ff007f');
     document.body.style.setProperty('--active-color-glow', 'rgba(255, 0, 127, 0.4)');
-    prideIndicator.style.backgroundColor = '#ff007f';
-    prideIndicator.style.boxShadow = '0 0 10px rgba(255, 0, 127, 0.6)';
+    if (prideIndicator) {
+      prideIndicator.style.backgroundColor = '#ff007f';
+      prideIndicator.style.boxShadow = '0 0 10px rgba(255, 0, 127, 0.6)';
+    }
   }
 }
 
@@ -547,22 +611,46 @@ function captureImageFromStream() {
   
   // Visual Flash Indicator
   const flash = document.getElementById('shutter-flash');
-  flash.classList.add('flash-active');
-  setTimeout(() => flash.classList.remove('flash-active'), 350);
+  if (flash) {
+    flash.classList.add('flash-active');
+    setTimeout(() => flash.classList.remove('flash-active'), 350);
+  }
   
   const video = document.getElementById('camera-stream');
+  let width = video ? video.videoWidth : 0;
+  let height = video ? video.videoHeight : 0;
+  
+  // Fallback if video dimensions are not resolved yet
+  if (!width || !height) {
+    width = video ? (video.clientWidth || 640) : 640;
+    height = video ? (video.clientHeight || 480) : 480;
+  }
+  
+  const size = Math.min(width, height);
+  if (size <= 0) {
+    console.warn("Viewfinder sizes are 0. Capture aborted.");
+    return;
+  }
   
   const canvas = document.createElement('canvas');
-  // Determine cropping to keep 1:1 aspect ratio
-  const size = Math.min(video.videoWidth, video.videoHeight);
   canvas.width = 480;
   canvas.height = 480;
   
   const ctx = canvas.getContext('2d');
-  const sx = (video.videoWidth - size) / 2;
-  const sy = (video.videoHeight - size) / 2;
+  const sx = ((video ? video.videoWidth : width) - size) / 2;
+  const sy = ((video ? video.videoHeight : height) - size) / 2;
   
-  ctx.drawImage(video, sx, sy, size, size, 0, 0, 480, 480);
+  try {
+    ctx.drawImage(video, sx, sy, size, size, 0, 0, 480, 480);
+  } catch (err) {
+    console.warn("drawImage coordinates failed, calling full-frame draw:", err);
+    try {
+      ctx.drawImage(video, 0, 0, 480, 480);
+    } catch (e) {
+      console.error("Direct frame capture also failed:", e);
+      return;
+    }
+  }
   
   const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
   
