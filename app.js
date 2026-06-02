@@ -1309,6 +1309,465 @@ function copyTextToClipboard(text) {
   });
 }
 
+// Instagram Canvas Sharing and Batch Downloads
+async function shareAsInstagram(layoutType) {
+  const toast = document.createElement('div');
+  toast.innerText = "Generating Instagram layout...";
+  toast.style.position = 'fixed';
+  toast.style.bottom = '20px';
+  toast.style.left = '50%';
+  toast.style.transform = 'translateX(-50%)';
+  toast.style.background = 'rgba(0,0,0,0.85)';
+  toast.style.color = '#fff';
+  toast.style.padding = '12px 24px';
+  toast.style.borderRadius = '30px';
+  toast.style.fontSize = '0.9rem';
+  toast.style.zIndex = '9999';
+  toast.style.boxShadow = '0 4px 15px rgba(0,0,0,0.5)';
+  document.body.appendChild(toast);
+
+  try {
+    const canvas = document.createElement('canvas');
+    const isPost = layoutType === 'post';
+    canvas.width = 1080;
+    canvas.height = isPost ? 1080 : 1920;
+    const ctx = canvas.getContext('2d');
+
+    // 1. Background
+    const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    grad.addColorStop(0, '#0f0c1b');
+    grad.addColorStop(1, '#05020a');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.beginPath();
+    let radGrad1 = ctx.createRadialGradient(200, 300, 10, 200, 300, 500);
+    radGrad1.addColorStop(0, 'rgba(255, 51, 68, 0.18)');
+    radGrad1.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = radGrad1;
+    ctx.arc(200, 300, 500, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.beginPath();
+    let radGrad2 = ctx.createRadialGradient(canvas.width - 200, canvas.height - 400, 10, canvas.width - 200, canvas.height - 400, 600);
+    radGrad2.addColorStop(0, 'rgba(51, 153, 255, 0.18)');
+    radGrad2.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = radGrad2;
+    ctx.arc(canvas.width - 200, canvas.height - 400, 600, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 2. Border
+    ctx.lineWidth = 14;
+    const borderGrad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    borderGrad.addColorStop(0, '#ff3344');
+    borderGrad.addColorStop(0.2, '#ff9933');
+    borderGrad.addColorStop(0.4, '#ffff33');
+    borderGrad.addColorStop(0.6, '#33cc66');
+    borderGrad.addColorStop(0.8, '#3399ff');
+    borderGrad.addColorStop(1, '#b266ff');
+    ctx.strokeStyle = borderGrad;
+    ctx.strokeRect(25, 25, canvas.width - 50, canvas.height - 50);
+
+    // 3. Load user captures
+    const loadedData = await new Promise((resolve) => {
+      const results = [];
+      let pending = PRIDE_COLORS.length;
+      PRIDE_COLORS.forEach((color) => {
+        const captureData = sessionCaptures[color.id];
+        if (captureData) {
+          const img = new Image();
+          img.onload = () => {
+            results.push({ id: color.id, img, color });
+            pending--;
+            if (pending === 0) resolve(results);
+          };
+          img.onerror = () => {
+            results.push({ id: color.id, img: null, color });
+            pending--;
+            if (pending === 0) resolve(results);
+          };
+          img.src = captureData;
+        } else {
+          results.push({ id: color.id, img: null, color });
+          pending--;
+          if (pending === 0) resolve(results);
+        }
+      });
+    });
+
+    const imageMap = {};
+    loadedData.forEach(item => {
+      imageMap[item.id] = item.img;
+    });
+
+    // 4. Coordinates
+    let flagX, flagY, flagW, flagH, stripeH;
+    let titleY, subtitleY, scoreY, rankY, brandY;
+
+    if (isPost) {
+      titleY = 130;
+      subtitleY = 180;
+      flagX = 140;
+      flagY = 240;
+      flagW = 800;
+      flagH = 560;
+      stripeH = 80;
+      scoreY = 880;
+      rankY = 940;
+      brandY = 1010;
+    } else {
+      titleY = 220;
+      subtitleY = 280;
+      flagX = 100;
+      flagY = 400;
+      flagW = 880;
+      flagH = 840;
+      stripeH = 120;
+      scoreY = 1380;
+      rankY = 1480;
+      brandY = 1780;
+    }
+
+    // 5. Draw Header
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = "800 64px 'Outfit', 'Plus Jakarta Sans', sans-serif";
+    ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';
+    ctx.shadowBlur = 15;
+    ctx.fillText("COLOR COLOR", canvas.width / 2, titleY);
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.font = "600 24px 'Plus Jakarta Sans', sans-serif";
+    ctx.fillText("🏳️‍🌈 PRIDE SCAVENGER HUNT COMPLETE 🏳️‍🌈", canvas.width / 2, subtitleY);
+
+    // 6. Draw stripes
+    PRIDE_COLORS.forEach((color, idx) => {
+      const sy = flagY + (idx * stripeH);
+      const img = imageMap[color.id];
+
+      if (idx > 0) {
+        ctx.fillStyle = '#000';
+        ctx.fillRect(flagX, sy - 2, flagW, 4);
+      }
+
+      if (img) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(flagX, sy, flagW, stripeH);
+        ctx.clip();
+
+        const sWidth = img.width;
+        const sHeight = img.width * (stripeH / flagW);
+        const syCrop = (img.height - sHeight) / 2;
+
+        ctx.drawImage(img, 0, syCrop, sWidth, sHeight, flagX, sy, flagW, stripeH);
+
+        const stripeGrad = ctx.createLinearGradient(flagX, sy, flagX + flagW, sy);
+        stripeGrad.addColorStop(0, 'rgba(0, 0, 0, 0.7)');
+        stripeGrad.addColorStop(0.3, 'rgba(0, 0, 0, 0.1)');
+        stripeGrad.addColorStop(0.7, 'rgba(0, 0, 0, 0.1)');
+        stripeGrad.addColorStop(1, 'rgba(0, 0, 0, 0.7)');
+        ctx.fillStyle = stripeGrad;
+        ctx.fillRect(flagX, sy, flagW, stripeH);
+
+        ctx.restore();
+      } else {
+        ctx.fillStyle = color.hex;
+        ctx.fillRect(flagX, sy, flagW, stripeH);
+      }
+
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#ffffff';
+      ctx.font = "700 28px 'Outfit', sans-serif";
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+      ctx.shadowBlur = 8;
+      ctx.fillText(`${color.name}: ${color.meaning}`, flagX + 30, sy + (stripeH / 2) + 10);
+
+      ctx.textAlign = 'right';
+      const scoreVal = sessionScores[color.id];
+      if (scoreVal !== undefined) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(`${scoreVal} pts`, flagX + flagW - 30, sy + (stripeH / 2) + 10);
+      } else {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.font = "bold 24px 'Outfit', sans-serif";
+        ctx.fillText("LOCKED", flagX + flagW - 30, sy + (stripeH / 2) + 9);
+      }
+      ctx.shadowBlur = 0;
+    });
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(flagX, flagY, flagW, flagH);
+
+    // 7. Stats
+    let totalScore = 0;
+    PRIDE_COLORS.forEach((color) => {
+      totalScore += sessionScores[color.id] || 0;
+    });
+    const rankVal = document.getElementById('summary-rank').innerText;
+
+    if (isPost) {
+      ctx.textAlign = 'center';
+      
+      // Centered Total Score box
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(310, scoreY - 50, 460, 100, 16);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.font = "600 18px 'Plus Jakarta Sans', sans-serif";
+      ctx.fillText("TOTAL SCORE", 540, scoreY - 15);
+      ctx.fillStyle = '#ffcc00';
+      ctx.font = "800 42px 'Outfit', sans-serif";
+      ctx.fillText(totalScore.toLocaleString(), 540, scoreY + 30);
+    } else {
+      ctx.textAlign = 'center';
+
+      // Centered Total Score box
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(240, scoreY - 50, 600, 110, 20);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.font = "600 20px 'Plus Jakarta Sans', sans-serif";
+      ctx.fillText("TOTAL SCORE", 540, scoreY - 15);
+      ctx.fillStyle = '#ffcc00';
+      ctx.font = "800 48px 'Outfit', sans-serif";
+      ctx.fillText(totalScore.toLocaleString(), 540, scoreY + 35);
+    }
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.font = "600 20px 'Plus Jakarta Sans', sans-serif";
+    ctx.fillText("Play at: " + window.location.host, canvas.width / 2, brandY);
+    if (!isPost) {
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.font = "bold 24px 'Plus Jakarta Sans', sans-serif";
+      ctx.fillText("Can you beat my score?", canvas.width / 2, brandY - 80);
+    }
+
+    const filename = `color-color-pride-${layoutType}.png`;
+    await shareOrDownloadCanvas(canvas, filename);
+
+  } catch (error) {
+    console.error("Failed to share Instagram layout:", error);
+    showDialogAlert("Sharing Error", "Could not generate shareable image.");
+  } finally {
+    if (toast.parentNode) {
+      toast.parentNode.removeChild(toast);
+    }
+  }
+}
+
+async function shareOrDownloadCanvas(canvas, filename) {
+  try {
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    const file = new File([blob], filename, { type: 'image/png' });
+    
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        files: [file],
+        title: 'Color Color Scavenger Hunt',
+        text: 'Check out my custom Pride Flag from the Color Color game!'
+      });
+    } else {
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showDialogAlert("Saved! 📥", `The image has been downloaded as '${filename}'. You can now post or upload it as a story on Instagram!`);
+    }
+  } catch (err) {
+    console.error("Canvas sharing failed:", err);
+    const link = document.createElement('a');
+    link.href = canvas.toDataURL('image/png');
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showDialogAlert("Saved! 📥", `The image has been downloaded. You can now post it manually!`);
+  }
+}
+
+function downloadAllSessionPhotos() {
+  let count = 0;
+  PRIDE_COLORS.forEach((color, idx) => {
+    const captureData = sessionCaptures[color.id];
+    if (captureData) {
+      count++;
+      setTimeout(() => {
+        const link = document.createElement('a');
+        link.href = captureData;
+        link.download = `color-color-${color.id}.jpg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }, idx * 250);
+    }
+  });
+  
+  if (count === 0) {
+    showDialogAlert("No Photos", "You haven't captured any photos in this session!");
+  } else {
+    showDialogAlert("Downloading! 📥", `Downloading ${count} captured photo(s). Please allow multiple file downloads if prompted by your browser.`);
+  }
+}
+
+async function downloadCleanCollage() {
+  const toast = document.createElement('div');
+  toast.innerText = "Generating clean collage...";
+  toast.style.position = 'fixed';
+  toast.style.bottom = '20px';
+  toast.style.left = '50%';
+  toast.style.transform = 'translateX(-50%)';
+  toast.style.background = 'rgba(0,0,0,0.85)';
+  toast.style.color = '#fff';
+  toast.style.padding = '12px 24px';
+  toast.style.borderRadius = '30px';
+  toast.style.fontSize = '0.9rem';
+  toast.style.zIndex = '9999';
+  toast.style.boxShadow = '0 4px 15px rgba(0,0,0,0.5)';
+  document.body.appendChild(toast);
+
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1200;
+    canvas.height = 840;
+    const ctx = canvas.getContext('2d');
+
+    // Load user captures
+    const loadedData = await new Promise((resolve) => {
+      const results = [];
+      let pending = PRIDE_COLORS.length;
+      PRIDE_COLORS.forEach((color) => {
+        const captureData = sessionCaptures[color.id];
+        if (captureData) {
+          const img = new Image();
+          img.onload = () => {
+            results.push({ id: color.id, img, color });
+            pending--;
+            if (pending === 0) resolve(results);
+          };
+          img.onerror = () => {
+            results.push({ id: color.id, img: null, color });
+            pending--;
+            if (pending === 0) resolve(results);
+          };
+          img.src = captureData;
+        } else {
+          results.push({ id: color.id, img: null, color });
+          pending--;
+          if (pending === 0) resolve(results);
+        }
+      });
+    });
+
+    const imageMap = {};
+    loadedData.forEach(item => {
+      imageMap[item.id] = item.img;
+    });
+
+    const flagW = 1200;
+    const flagH = 840;
+    const stripeH = 120;
+
+    // Draw Stripes
+    PRIDE_COLORS.forEach((color, idx) => {
+      const sy = idx * stripeH;
+      const img = imageMap[color.id];
+
+      // Draw thin black separator line
+      if (idx > 0) {
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, sy - 2, flagW, 4);
+      }
+
+      if (img) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, sy, flagW, stripeH);
+        ctx.clip();
+
+        // Crop centered image
+        const sWidth = img.width;
+        const sHeight = img.width * (stripeH / flagW);
+        const syCrop = (img.height - sHeight) / 2;
+
+        ctx.drawImage(img, 0, syCrop, sWidth, sHeight, 0, sy, flagW, stripeH);
+        ctx.restore();
+      } else {
+        // Fallback: draw solid hex color
+        ctx.fillStyle = color.hex;
+        ctx.fillRect(0, sy, flagW, stripeH);
+      }
+    });
+
+    // Add a very subtle thin border around the outer flag
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(0, 0, flagW, flagH);
+
+    // Download the canvas
+    const filename = "color-color-clean-pride-flag.png";
+    const link = document.createElement('a');
+    link.href = canvas.toDataURL('image/png');
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showDialogAlert("Collage Downloaded! 📥", "Your clean Pride Flag collage has been downloaded successfully!");
+  } catch (error) {
+    console.error("Clean collage generation failed:", error);
+    showDialogAlert("Download Error", "Could not generate clean collage.");
+  } finally {
+    if (toast.parentNode) {
+      toast.parentNode.removeChild(toast);
+    }
+  }
+}
+
+async function inviteFriends() {
+  const shareTitle = "Play Color Color Scavenger Hunt! 🏳️‍🌈";
+  const shareText = "Hey! You should try 'Color Color' – an awesome mobile web game where you search and photograph objects in your environment to match the Pride Flag colors under 30 seconds! Play here:";
+  const shareUrl = window.location.origin + window.location.pathname;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: shareTitle,
+        text: shareText,
+        url: shareUrl
+      });
+    } catch (err) {
+      console.warn("Native invite failed:", err);
+      copyInviteLink(shareText, shareUrl);
+    }
+  } else {
+    copyInviteLink(shareText, shareUrl);
+  }
+}
+
+function copyInviteLink(text, url) {
+  navigator.clipboard.writeText(`${text} ${url}`).then(() => {
+    showDialogAlert("Invite Link Copied! 📋", "Invite message and link copied to clipboard. Share it with your friends!");
+  }).catch((err) => {
+    console.error("Clipboard copy failed:", err);
+  });
+}
+
 // --- 12. Setup Event Listeners ---
 function bindInteractiveEvents() {
   
@@ -1395,9 +1854,29 @@ function bindInteractiveEvents() {
   });
   
   // Summary controls
-  document.getElementById('btn-share-score').addEventListener('click', () => {
+  document.getElementById('btn-share-insta-post').addEventListener('click', () => {
     sfx.playClick();
-    shareGameCompletionScore();
+    shareAsInstagram('post');
+  });
+  
+  document.getElementById('btn-share-insta-story').addEventListener('click', () => {
+    sfx.playClick();
+    shareAsInstagram('story');
+  });
+
+  document.getElementById('btn-download-photos').addEventListener('click', () => {
+    sfx.playClick();
+    downloadAllSessionPhotos();
+  });
+
+  document.getElementById('btn-download-collage').addEventListener('click', () => {
+    sfx.playClick();
+    downloadCleanCollage();
+  });
+
+  document.getElementById('btn-invite-friends').addEventListener('click', () => {
+    sfx.playClick();
+    inviteFriends();
   });
   
   document.getElementById('btn-replay').addEventListener('click', () => {

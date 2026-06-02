@@ -1177,6 +1177,29 @@ button {
 .summary-actions button {
   width: 100%;
 }
+.summary-actions-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+.summary-actions-row button {
+  flex: 1;
+  width: 100%;
+}
+.btn-small {
+  padding: 8px 16px !important;
+  font-size: 0.82rem !important;
+  border-radius: 20px !important;
+}
+.btn-insta {
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%) !important;
+  box-shadow: 0 4px 15px rgba(220, 39, 67, 0.4) !important;
+  border: none !important;
+}
+.btn-insta:hover, .btn-insta:active {
+  box-shadow: 0 6px 20px rgba(220, 39, 67, 0.6) !important;
+  transform: translateY(-2px);
+}
 
 /* ==========================================================================
    SCREEN 6: GALLERY
